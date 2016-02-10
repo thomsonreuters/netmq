@@ -61,6 +61,8 @@ namespace NetMQ.zmq
         DelayAttachOnConnect = 39,
         XpubVerbose = 40,
         RouterRawSocket = 41,
+        SendLowWatermark = 46,
+        ReceiveLowWatermark = 47,
 
         Endian = 1000,
 

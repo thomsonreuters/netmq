@@ -101,7 +101,7 @@ namespace NetMQ.zmq
 
         ///<remarks> Constructor is private as pipe can only be created using <see cref="PipePair"/> method. </remarks>
         private Pipe(ZObject parent, YPipe<Msg> inboundPipe, YPipe<Msg> outboundPipe,
-                      int inHighWatermark, int outHighWatermark, bool delay)
+                      int inHighWatermark, int outHighWatermark, int predefinedLowWatermark, bool delay)
             : base(parent)
         {
             m_parent = parent;
@@ -110,7 +110,7 @@ namespace NetMQ.zmq
             m_inActive = true;
             m_outActive = true;
             m_highWatermark = outHighWatermark;
-            m_lowWatermark = ComputeLowWatermark(inHighWatermark);
+            m_lowWatermark = ComputeLowWatermark(inHighWatermark, predefinedLowWatermark);
             m_numberOfMessagesRead = 0;
             m_numberOfMessagesWritten = 0;
             m_peersMsgsRead = 0;
@@ -128,7 +128,7 @@ namespace NetMQ.zmq
         /// pipe receives all the pending messages before terminating, otherwise it
         /// terminates straight away.</param>
         /// <returns>A pipe pair for bi-directional transfer of messages. </returns>
-        public static Pipe[] PipePair(ZObject[] parents, int[] highWaterMarks, bool[] delays)
+        public static Pipe[] PipePair(ZObject[] parents, int[] highWaterMarks, int[] lowWaterMarks, bool[] delays)
         {
             //   Creates two pipe objects. These objects are connected by two ypipes,
             //   each to pass messages in one direction.
@@ -138,9 +138,9 @@ namespace NetMQ.zmq
 
             var pipes = new Pipe[2];
             pipes[0] = new Pipe(parents[0], upipe1, upipe2,
-                                  highWaterMarks[1], highWaterMarks[0], delays[0]);
+                                  highWaterMarks[1], highWaterMarks[0], lowWaterMarks[1], delays[0]);
             pipes[1] = new Pipe(parents[1], upipe2, upipe1,
-                                  highWaterMarks[0], highWaterMarks[1], delays[1]);
+                                  highWaterMarks[0], highWaterMarks[1], lowWaterMarks[0], delays[1]);
 
             pipes[0].SetPeer(pipes[1]);
             pipes[1].SetPeer(pipes[0]);
@@ -200,7 +200,7 @@ namespace NetMQ.zmq
         {
             if (!m_inActive || (m_state != State.Active && m_state != State.Pending))
                 return false;
-            
+
             if (!m_inboundPipe.Read(ref msg))
             {
                 m_inActive = false;
@@ -403,7 +403,7 @@ namespace NetMQ.zmq
                 msg.Close();
             }
 
-            m_inboundPipe = null;            
+            m_inboundPipe = null;
         }
 
         /// <summary> Ask pipe to terminate. The termination will happen asynchronously
@@ -489,8 +489,11 @@ namespace NetMQ.zmq
         }
 
         //  Computes appropriate low watermark from the given high watermark.
-        private static int ComputeLowWatermark(int highWatermark)
+        private static int ComputeLowWatermark(int highWatermark, int predefinedLowWatermark)
         {
+            if (predefinedLowWatermark > 0 && predefinedLowWatermark < highWatermark)
+                return predefinedLowWatermark;
+
             //  Compute the low water mark. Following point should be taken
             //  into consideration:
             //

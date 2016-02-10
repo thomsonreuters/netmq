@@ -105,6 +105,18 @@ namespace NetMQ
             set { m_socket.SetSocketOption(ZmqSocketOptions.ReceivevHighWatermark, value); }
         }
 
+        public int SendLowWatermark
+        {
+            get { return m_socket.GetSocketOption(ZmqSocketOptions.SendLowWatermark); }
+            set { m_socket.SetSocketOption(ZmqSocketOptions.SendLowWatermark, value); }
+        }
+
+        public int ReceiveLowWatermark
+        {
+            get { return m_socket.GetSocketOption(ZmqSocketOptions.ReceiveLowWatermark); }
+            set { m_socket.SetSocketOption(ZmqSocketOptions.ReceiveLowWatermark, value); }
+        }
+
         public int MulticastHops
         {
             get { return m_socket.GetSocketOption(ZmqSocketOptions.MulticastHops); }

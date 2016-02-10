@@ -32,6 +32,8 @@ namespace NetMQ.zmq
         {
             SendHighWatermark = 1000;
             ReceiveHighWatermark = 1000;
+            SendLowWatermark = 0;
+            ReceiveLowWatermark = 0;
             Affinity = 0;
             IdentitySize = 0;
             Rate = 100;
@@ -70,6 +72,10 @@ namespace NetMQ.zmq
         //  High-water marks for message pipes.
         public int SendHighWatermark { get; set; }
         public int ReceiveHighWatermark { get; set; }
+
+        //  Low-water marks for message pipes.
+        public int SendLowWatermark { get; set; }
+        public int ReceiveLowWatermark { get; set; }
 
         //  I/O thread affinity.
         public long Affinity { get; set; }
@@ -168,6 +174,12 @@ namespace NetMQ.zmq
                     break;
                 case ZmqSocketOptions.ReceivevHighWatermark:
                     ReceiveHighWatermark = (int)optval;
+                    break;
+                case ZmqSocketOptions.SendLowWatermark:
+                    SendLowWatermark = (int)optval;
+                    break;
+                case ZmqSocketOptions.ReceiveLowWatermark:
+                    ReceiveLowWatermark = (int)optval;
                     break;
 
                 case ZmqSocketOptions.Affinity:
